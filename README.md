@@ -37,6 +37,13 @@ Spendly is designed with an **Offline-First** philosophy, ensuring users can log
 ---
 
 ## 🏗 Developer Guide
+
+### 🚀 How to Launch in Android Studio
+1. **Open the Project:** Launch Android Studio and click **Open**. Select the `Spendly` root folder.
+2. **Gradle Sync:** Wait for Android Studio to finish the initial Gradle sync (it will download necessary dependencies like Compose, Hilt, Room, etc.).
+3. **Select a Device:** Choose an Android Virtual Device (Emulator) or a physical device connected via USB/Wi-Fi from the device dropdown menu in the top toolbar.
+4. **Run the App:** Click the green **Run 'app'** button (or press `Shift + F10`). The IDE will build the project and launch it on your selected device.
+
 For a detailed list of **Completed Work** and **Remaining Implementation Tasks**, please refer to the internal status tracker:
 
 👉 **[PROJECT_STATUS.md](./PROJECT_STATUS.md)**
