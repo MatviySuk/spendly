@@ -7,6 +7,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -14,13 +17,16 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import edu.feup.spendly.data.connectivity.ConnectivityObserver
 import edu.feup.spendly.presentation.navigation.Screen
 import edu.feup.spendly.presentation.navigation.SpendlyNavHost
 import edu.feup.spendly.ui.theme.SpendlyTheme
@@ -37,18 +43,24 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) {
-             // Handle tag scan...
+             viewModel.handleNfcIntent(intent)
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) {
+             viewModel.handleNfcIntent(intent)
+        }
+
         setContent {
             val darkThemePref by viewModel.darkTheme.collectAsState()
             val useDarkTheme = darkThemePref ?: isSystemInDarkTheme()
 
             SpendlyTheme(darkTheme = useDarkTheme) {
                 val navController = rememberNavController()
+                val connectivity by viewModel.connectivityStatus.collectAsState()
                 
                 val items = listOf(
                     BottomNavItem("Home", Screen.Home.route, Icons.Filled.Home),
@@ -57,6 +69,22 @@ class MainActivity : ComponentActivity() {
                 )
 
                 Scaffold(
+                    topBar = {
+                        if (connectivity != ConnectivityObserver.Status.Available) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                modifier = Modifier.fillMaxWidth().height(24.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = "Offline Mode - Cloud Sync Paused",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        }
+                    },
                     bottomBar = {
                         val navBackStackEntry by navController.currentBackStackEntryAsState()
                         val currentDestination = navBackStackEntry?.destination

@@ -6,9 +6,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
@@ -44,11 +46,6 @@ fun AnalysisScreen(
     LaunchedEffect(sortedCategoryTotals) {
         if (totals.isNotEmpty()) {
             modelProducer.runTransaction {
-                /*
-                 * We create multiple series, each with one bar, so that we can
-                 * assign different colors to each bar using the series column provider.
-                 * This ensures the bar color matches the category color in the list.
-                 */
                 columnSeries {
                     totals.forEachIndexed { index, total ->
                         series(x = listOf(index), y = listOf(total))
@@ -71,7 +68,21 @@ fun AnalysisScreen(
             fontWeight = FontWeight.Bold
         )
 
-        if (totals.isNotEmpty()) {
+        if (totals.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No data to analyze yet.\nAdd some expenses to see your spending breakdown!",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,42 +129,42 @@ fun AnalysisScreen(
                     )
                 }
             }
-        }
 
-        Text(
-            text = "Top Categories",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+            Text(
+                text = "Top Categories",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
 
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            sortedCategoryTotals.forEach { (category, total) ->
-                val color = CategoryColors.getColorForCategory(category)
-                
-                Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(16.dp),
-                    shadowElevation = 1.dp
-                ) {
-                    ListItem(
-                        leadingContent = {
-                            Surface(
-                                modifier = Modifier.size(12.dp),
-                                shape = RoundedCornerShape(4.dp),
-                                color = color
-                            ) {}
-                        },
-                        headlineContent = { Text(category, fontWeight = FontWeight.SemiBold) },
-                        trailingContent = { 
-                            Text(
-                                text = "€${String.format("%.2f", total)}",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            ) 
-                        },
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-                    )
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                sortedCategoryTotals.forEach { (category, total) ->
+                    val color = CategoryColors.getColorForCategory(category)
+                    
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(16.dp),
+                        shadowElevation = 1.dp
+                    ) {
+                        ListItem(
+                            leadingContent = {
+                                Surface(
+                                    modifier = Modifier.size(12.dp),
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = color
+                                ) {}
+                            },
+                            headlineContent = { Text(category, fontWeight = FontWeight.SemiBold) },
+                            trailingContent = { 
+                                Text(
+                                    text = "€${String.format("%.2f", total)}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ) 
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                        )
+                    }
                 }
             }
         }

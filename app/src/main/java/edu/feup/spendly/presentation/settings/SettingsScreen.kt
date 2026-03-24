@@ -3,8 +3,6 @@ package edu.feup.spendly.presentation.settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,10 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import edu.feup.spendly.data.connectivity.ConnectivityObserver
 import java.util.Locale
 
 /**
@@ -32,76 +30,74 @@ fun SettingsScreen(
     viewModel: SettingsViewModel
 ) {
     val isSyncing by viewModel.isSyncing.collectAsState()
-    val currency by viewModel.currency.collectAsState()
     val darkTheme by viewModel.darkTheme.collectAsState()
     val budget by viewModel.budget.collectAsState()
+    val connectivity by viewModel.connectivityStatus.collectAsState()
 
-    var showCurrencyDialog by remember { mutableStateOf(false) }
     var showBudgetDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        Text(
-            text = "Settings",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+    val snackbarHostState = remember { SnackbarHostState() }
+    val error by viewModel.error.collectAsState()
 
-        // General Section
-        SettingsSection(title = "General") {
-            SettingsClickableItem(
-                title = "Currency",
-                subtitle = currency,
-                icon = Icons.Default.AccountBalanceWallet,
-                onClick = { showCurrencyDialog = true }
-            )
-            
-            SettingsClickableItem(
-                title = "Monthly Budget",
-                subtitle = if (budget > 0) String.format(Locale.getDefault(), "€%.2f", budget) else "Not set",
-                icon = Icons.Default.Timeline,
-                onClick = { showBudgetDialog = true }
-            )
-        }
-
-        // Appearance Section
-        SettingsSection(title = "Appearance") {
-            SettingsToggleItem(
-                title = "Dark Theme",
-                subtitle = when(darkTheme) {
-                    true -> "On"
-                    false -> "Off"
-                    null -> "System default"
-                },
-                icon = Icons.Default.DarkMode,
-                checked = darkTheme ?: false,
-                onCheckedChange = { viewModel.onDarkThemeChange(it) }
-            )
-        }
-
-        // Data & Sync Section
-        SettingsSection(title = "Data & Sync") {
-            SettingsSyncItem(
-                isSyncing = isSyncing,
-                onSyncClick = { viewModel.triggerManualSync() }
-            )
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
         }
     }
 
-    if (showCurrencyDialog) {
-        CurrencySelectionDialog(
-            currentCurrency = currency,
-            onDismiss = { showCurrencyDialog = false },
-            onCurrencySelected = {
-                viewModel.onCurrencyChange(it)
-                showCurrencyDialog = false
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        modifier = Modifier.fillMaxSize()
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Text(
+                text = "Settings",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            // General Section
+            SettingsSection(title = "General") {
+                SettingsClickableItem(
+                    title = "Monthly Budget",
+                    subtitle = if (budget > 0) String.format(Locale.getDefault(), "€%.2f", budget) else "Not set",
+                    icon = Icons.Default.Timeline,
+                    onClick = { showBudgetDialog = true }
+                )
             }
-        )
+
+            // Appearance Section
+            SettingsSection(title = "Appearance") {
+                SettingsToggleItem(
+                    title = "Dark Theme",
+                    subtitle = when(darkTheme) {
+                        true -> "On"
+                        false -> "Off"
+                        null -> "System default"
+                    },
+                    icon = Icons.Default.DarkMode,
+                    checked = darkTheme ?: false,
+                    onCheckedChange = { viewModel.onDarkThemeChange(it) }
+                )
+            }
+
+            // Data & Sync Section
+            SettingsSection(title = "Data & Sync") {
+                SettingsSyncItem(
+                    isSyncing = isSyncing,
+                    isConnected = connectivity == ConnectivityObserver.Status.Available,
+                    onSyncClick = { viewModel.triggerManualSync() }
+                )
+            }
+        }
     }
 
     if (showBudgetDialog) {
@@ -173,66 +169,37 @@ fun SettingsToggleItem(
 @Composable
 fun SettingsSyncItem(
     isSyncing: Boolean,
+    isConnected: Boolean,
     onSyncClick: () -> Unit
 ) {
     ListItem(
         headlineContent = { Text("Manual Cloud Sync") },
-        supportingContent = { Text("Force immediate synchronization") },
-        leadingContent = { Icon(Icons.Default.Sync, contentDescription = null) },
+        supportingContent = { 
+            Text(
+                if (isConnected) "Force immediate synchronization" 
+                else "Sync unavailable while offline"
+            ) 
+        },
+        leadingContent = { 
+            Icon(
+                imageVector = Icons.Default.Sync, 
+                contentDescription = null,
+                tint = if (isConnected) LocalContentColor.current else MaterialTheme.colorScheme.outline
+            ) 
+        },
         trailingContent = {
             if (isSyncing) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             } else {
-                TextButton(onClick = onSyncClick) {
+                TextButton(
+                    onClick = onSyncClick,
+                    enabled = isConnected
+                ) {
                     Text("SYNC NOW")
                 }
             }
         },
         colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
-    )
-}
-
-@Composable
-fun CurrencySelectionDialog(
-    currentCurrency: String,
-    onDismiss: () -> Unit,
-    onCurrencySelected: (String) -> Unit
-) {
-    val options = listOf("EUR", "USD", "GBP", "JPY")
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Currency") },
-        text = {
-            Column(Modifier.selectableGroup()) {
-                options.forEach { text ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .selectable(
-                                selected = (text == currentCurrency),
-                                onClick = { onCurrencySelected(text) },
-                                role = Role.RadioButton
-                            )
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = (text == currentCurrency),
-                            onClick = null
-                        )
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 16.dp)
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
     )
 }
 

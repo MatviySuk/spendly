@@ -17,7 +17,7 @@ The project strictly adheres to separation of concerns by dividing the applicati
 ### C. Data Layer (Persistence & Networking)
 - **Local Source (Room):** Acts as the **Single Source of Truth**. The UI observes the local database, ensuring the app is usable 100% offline (**Requirement 3.3 & 3.7**).
 - **Remote Source (Retrofit):** Handles REST/HTTP communication with the backend (GET/POST) asynchronously (**Requirement 3.4 & 3.5**).
-- **Settings (DataStore):** Persists user preferences (e.g., Currency) on disk (**Requirement 3.3**).
+- **Settings (DataStore):** Persists user preferences (e.g., Theme, Budget) on disk (**Requirement 3.3**).
 
 ---
 

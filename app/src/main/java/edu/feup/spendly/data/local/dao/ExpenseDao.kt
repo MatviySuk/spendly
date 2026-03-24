@@ -21,14 +21,14 @@ interface ExpenseDao {
     suspend fun deleteExpense(expense: ExpenseEntity)
 
     /**
-     * TODO: Implement a query to get only unsynced expenses.
+     * Get only unsynced expenses.
      * Requirement 3.7: This is crucial for the offline-first synchronization strategy.
      */
     @Query("SELECT * FROM expenses WHERE isSynced = 0")
     suspend fun getUnsyncedExpenses(): List<ExpenseEntity>
 
     /**
-     * TODO: Implement a query to mark an expense as synced after successful network upload.
+     * Mark an expense as synced after successful network upload.
      */
     @Query("UPDATE expenses SET isSynced = 1 WHERE id = :id")
     suspend fun markAsSynced(id: String)

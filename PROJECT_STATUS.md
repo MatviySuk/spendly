@@ -28,7 +28,7 @@ This document tracks the progress of the Spendly Android application against the
 
 ### 5. Offline & Background (Req 3.7)
 - [x] **Connectivity Observation:** `ConnectivityObserver` implemented to detect network changes.
-- [x] **Background Sync:** `SyncWorker` (WorkManager) scaffolded for reliable data backup.
+- [x] **Background Sync:** `SyncWorker` (WorkManager) scaffolded for reliable data backup and scheduled in `SpendlyApp`.
 
 ---
 
@@ -37,38 +37,38 @@ This document tracks the progress of the Spendly Android application against the
 
 ### 📍 Task 1: Meaningful Sensor Integration (Req 3.6)
 - **Goal:** Use the Location sensor to automatically tag expenses.
-- [ ] Implement `fetchCurrentLocation()` in `AddExpenseViewModel.kt`.
-- [ ] Use `FusedLocationProviderClient` to get coordinates.
-- [ ] Use `Geocoder` to convert coordinates into a city name (e.g., "Porto").
+- [x] Implement `fetchCurrentLocation()` in `AddExpenseViewModel.kt`.
+- [x] Use `FusedLocationProviderClient` to get coordinates.
+- [x] Use `Geocoder` to convert coordinates into a city name (e.g., "Porto").
 - [ ] **Bonus:** Implement "Shake to Clear" using the Accelerometer in the Add Expense screen.
 
 ### 📝 Task 2: Expense Entry Forms (Req 3.2 & 3.3)
 - **Goal:** Build a functional and user-friendly data entry UI.
-- [ ] Complete `AddExpenseScreen.kt` UI (Amount input, Category dropdown, Notes field).
-- [ ] Add input validation (ensure amount is a valid number).
-- [ ] Implement the "Save" button to trigger the `AddExpenseUseCase`.
+- [x] Complete `AddExpenseScreen.kt` UI (Amount input, Category dropdown, Notes field).
+- [x] Add input validation (ensure amount is a valid number).
+- [x] Implement the "Save" button to trigger the `AddExpenseUseCase`.
 
 ### 📊 Task 3: Spending Analysis & Charts (Req 3.2)
 - **Goal:** Visualize data as required by the assignment.
-- [ ] Implement a Category Pie Chart or Bar Chart in `AnalysisScreen.kt`.
-- [ ] Use the **Vico** library (already in dependencies).
-- [ ] Logic: Filter and group expenses by category to provide monthly totals.
+- [x] Implement a Category Pie Chart or Bar Chart in `AnalysisScreen.kt`.
+- [x] Use the **Vico** library (already in dependencies).
+- [x] Logic: Filter and group expenses by category to provide monthly totals.
 
 ### ⚙️ Task 4: Persistent User Settings (Req 3.3)
 - **Goal:** Save user preferences on disk.
-- [ ] Implement Currency selection (EUR/USD) in `SettingsScreen.kt`.
-- [ ] Save/Load the selection using `UserPreferencesRepository.kt` (Jetpack DataStore).
-- [ ] **Bonus:** Implement a Manual Sync button that triggers the `SyncWorker`.
+- [x] Implement Budget selection in `SettingsScreen.kt`.
+- [x] Save/Load the selection using `UserPreferencesRepository.kt` (Jetpack DataStore).
+- [x] **Bonus:** Implement a Manual Sync button that triggers the `SyncWorker`.
 
 ### 📱 Task 5: NFC Quick Log (Bonus Req 3.6)
 - **Goal:** Extra points for NFC hardware integration.
-- [ ] Implement NDEF message parsing in `ProcessNfcTagUseCase.kt`.
-- [ ] Create a "Quick Log" flow where tapping a tag automatically saves a predefined expense.
+- [x] Implement NDEF message parsing in `ProcessNfcTagUseCase.kt`.
+- [x] Create a "Quick Log" flow where tapping a tag automatically saves a predefined expense.
 
 ---
 
 ## 🚀 Final Delivery Checklist
-- [ ] Update `YOUR_PROJECT_ID` in `AppModule.kt` with actual backend URL.
+- [x] Update Firebase URL in `local.properties` (Done, `BuildConfig.FIREBASE_DB_URL`).
 - [ ] Conduct final testing on a physical Android device.
 - [ ] Generate the final APK for submission.
 - [ ] Record a 2-minute demo video.

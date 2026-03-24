@@ -22,7 +22,7 @@ class AnalysisViewModel @Inject constructor(
 
     /**
      * Requirement 3.5: Asynchronous processing using StateFlow.
-     * TODO: Group expenses by category and calculate total per category.
+     * Expenses grouped by category with calculated totals.
      */
     val categoryTotals: StateFlow<Map<String, Double>> = repository.getExpenses()
         .map { expenses ->

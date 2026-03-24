@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import edu.feup.spendly.BuildConfig
 import edu.feup.spendly.data.connectivity.ConnectivityObserver
 import edu.feup.spendly.data.connectivity.NetworkConnectivityObserver
 import edu.feup.spendly.data.local.SpendlyDatabase
@@ -60,7 +61,7 @@ object AppModule {
         val contentType = "application/json".toMediaType()
         
         return Retrofit.Builder()
-            .baseUrl("https://firestore.googleapis.com/v1/projects/YOUR_PROJECT_ID/databases/(default)/documents/")
+            .baseUrl(BuildConfig.FIREBASE_DB_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

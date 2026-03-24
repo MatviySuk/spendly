@@ -16,9 +16,12 @@ work = "2.10.0"
 navigation = "2.8.5"
 datastore = "1.1.2"
 serialization = "1.8.0"
+playServicesLocation = "21.3.0"
 ksp = "2.1.0-1.0.29"
 
 [libraries]
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version = "1.8.0" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

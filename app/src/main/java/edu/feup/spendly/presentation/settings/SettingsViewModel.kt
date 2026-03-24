@@ -3,6 +3,7 @@ package edu.feup.spendly.presentation.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.feup.spendly.data.connectivity.ConnectivityObserver
 import edu.feup.spendly.data.repository.UserPreferencesRepository
 import edu.feup.spendly.domain.repository.ExpenseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,15 +20,15 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repository: ExpenseRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
 
     private val _isSyncing = MutableStateFlow(false)
     val isSyncing: StateFlow<Boolean> = _isSyncing
 
-    val currency = userPreferencesRepository.currencyFlow.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), "EUR"
-    )
+    val connectivityStatus = connectivityObserver.observe()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ConnectivityObserver.Status.Unavailable)
 
     val darkTheme = userPreferencesRepository.darkThemeFlow.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), null
@@ -37,11 +38,8 @@ class SettingsViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0
     )
 
-    fun onCurrencyChange(newCurrency: String) {
-        viewModelScope.launch {
-            userPreferencesRepository.updateCurrency(newCurrency)
-        }
-    }
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
 
     fun onDarkThemeChange(isDark: Boolean?) {
         viewModelScope.launch {
@@ -65,10 +63,14 @@ class SettingsViewModel @Inject constructor(
             try {
                 repository.syncWithRemote()
             } catch (e: Exception) {
-                // TODO: Handle error state (Requirement 3.5)
+                _error.value = "Cloud synchronization failed. Please check your internet connection."
             } finally {
                 _isSyncing.value = false
             }
         }
+    }
+
+    fun clearError() {
+        _error.value = null
     }
 }

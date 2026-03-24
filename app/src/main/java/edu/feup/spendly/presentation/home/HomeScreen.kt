@@ -32,16 +32,10 @@ fun HomeScreen(
     onAddExpenseClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val currency by viewModel.currency.collectAsState()
     val budget by viewModel.budget.collectAsState()
     val darkTheme by viewModel.darkTheme.collectAsState()
 
-    val currencySymbol = when (currency) {
-        "USD" -> "$"
-        "GBP" -> "£"
-        "JPY" -> "¥"
-        else -> "€"
-    }
+    val currencySymbol = "€"
 
     Scaffold(
         topBar = {

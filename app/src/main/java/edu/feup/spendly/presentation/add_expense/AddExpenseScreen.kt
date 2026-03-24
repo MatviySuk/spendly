@@ -1,5 +1,8 @@
 package edu.feup.spendly.presentation.add_expense
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,14 +42,40 @@ fun AddExpenseScreen(
     var expanded by remember { mutableStateOf(false) }
     val categories = listOf("Food", "Transport", "Shopping", "Entertainment", "Health", "Other")
 
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        if (fineLocationGranted || coarseLocationGranted) {
+            viewModel.fetchCurrentLocation()
+        }
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val error by viewModel.error.collectAsState()
+
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
 
     LaunchedEffect(Unit) {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
         viewModel.saveSuccess.collectLatest {
             onBack()
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 
@@ -145,32 +174,19 @@ fun AddExpenseScreen(
                 )
             }
 
-            // 4. Location Status
-            Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
+            // 4. Location Field
+            FormField(
+                label = "Location",
+                icon = Icons.Default.LocationOn
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = location ?: "Detecting location...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (location == null) 
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f) 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                OutlinedTextField(
+                    value = location ?: "",
+                    onValueChange = { viewModel.onLocationManualChange(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Detecting location...") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))

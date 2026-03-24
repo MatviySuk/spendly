@@ -36,9 +36,6 @@ class HomeViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     private val _displayLimit = MutableStateFlow(5)
 
-    val currency: StateFlow<String> = userPreferencesRepository.currencyFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "EUR")
-
     val budget: StateFlow<Double> = userPreferencesRepository.budgetFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
