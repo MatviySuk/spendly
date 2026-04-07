@@ -14,7 +14,8 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
-val firebaseDbUrl = localProperties.getProperty("FIREBASE_URL") ?: "\"https://YOUR_PROJECT_ID.firebaseio.com/\""
+// Using the URL from the user's Firebase console screenshot as the default
+val firebaseDbUrl = localProperties.getProperty("FIREBASE_URL") ?: "\"https://spendly-7f30d-default-rtdb.europe-west1.firebasedatabase.app/\""
 
 android {
     namespace = "edu.feup.spendly"

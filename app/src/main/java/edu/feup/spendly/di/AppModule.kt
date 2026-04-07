@@ -72,9 +72,10 @@ object AppModule {
     @Singleton
     fun provideExpenseRepository(
         dao: ExpenseDao,
-        api: ExpenseApi
+        api: ExpenseApi,
+        userPrefs: UserPreferencesRepository
     ): ExpenseRepository {
-        return ExpenseRepositoryImpl(dao, api)
+        return ExpenseRepositoryImpl(dao, api, userPrefs)
     }
 
     @Provides

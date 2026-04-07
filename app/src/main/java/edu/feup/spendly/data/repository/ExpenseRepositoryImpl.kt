@@ -1,5 +1,6 @@
 package edu.feup.spendly.data.repository
 
+import android.util.Log
 import edu.feup.spendly.data.local.dao.ExpenseDao
 import edu.feup.spendly.data.mapper.toDomain
 import edu.feup.spendly.data.mapper.toDto
@@ -16,7 +17,8 @@ import kotlinx.coroutines.flow.map
  */
 class ExpenseRepositoryImpl(
     private val expenseDao: ExpenseDao,
-    private val expenseApi: ExpenseApi
+    private val expenseApi: ExpenseApi,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ExpenseRepository {
 
     override fun getExpenses(): Flow<List<Expense>> {
@@ -31,12 +33,17 @@ class ExpenseRepositoryImpl(
 
         // Requirement 3.4: Immediate sync attempt (Requirement 3.5: Async)
         try {
-            val response = expenseApi.uploadExpense(expense.id, expense.toDto())
+            val userId = userPreferencesRepository.getDeviceId()
+            Log.d("SyncDebug", "Attempting to upload expense: ${expense.id} for user: $userId")
+            val response = expenseApi.uploadExpense(userId, expense.id, expense.toDto())
             if (response.isSuccessful) {
+                Log.d("SyncDebug", "Sync Successful for ${expense.id}")
                 expenseDao.markAsSynced(expense.id)
+            } else {
+                Log.e("SyncDebug", "Sync Failed: ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            // Log error or let WorkManager handle retry (Requirement 3.5 & 3.7)
+            Log.e("SyncDebug", "Network Error during sync", e)
         }
     }
 
@@ -44,27 +51,32 @@ class ExpenseRepositoryImpl(
         /**
          * Requirement 3.7: Robust synchronization logic.
          */
+        val userId = userPreferencesRepository.getDeviceId()
+        Log.d("SyncDebug", "Starting manual/background sync for user: $userId")
+        
         // 1. Upload unsynced local data
         val unsynced = expenseDao.getUnsyncedExpenses()
         unsynced.forEach { entity ->
             try {
-                val response = expenseApi.uploadExpense(entity.id, entity.toDomain().toDto())
+                val response = expenseApi.uploadExpense(userId, entity.id, entity.toDomain().toDto())
                 if (response.isSuccessful) {
                     expenseDao.markAsSynced(entity.id)
                 }
             } catch (e: Exception) {
-                // Network failure, skip for now
+                Log.e("SyncDebug", "Error syncing ${entity.id}", e)
             }
         }
 
         // 2. Download remote data and merge
         try {
-            val remoteExpenses = expenseApi.getExpenses()
+            Log.d("SyncDebug", "Fetching remote data for user: $userId")
+            val remoteExpenses = expenseApi.getExpenses(userId)
+            Log.d("SyncDebug", "Remote data size: ${remoteExpenses?.size ?: 0}")
             remoteExpenses?.values?.forEach { dto ->
                 expenseDao.insertExpense(dto.toEntity(isSynced = true))
             }
         } catch (e: Exception) {
-            // Network failure
+            Log.e("SyncDebug", "Error fetching remote data", e)
         }
     }
 }
